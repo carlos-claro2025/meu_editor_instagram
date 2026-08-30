@@ -1,0 +1,29 @@
+.template-cell:hover {
+  border-color: rgba(233, 196, 106, 0.8) !important;
+}
+.template-cell .cell-img {
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+[data-filter="clarea"] {
+  filter: brightness(1.05) contrast(1.05) saturate(1.05);
+}
+[data-filter="avella"] {
+  filter: sepia(0.25) saturate(1.3) contrast(1.08);
+}
+[data-filter="por-do-sol"] {
+  filter: saturate(1.5) sepia(0.4) hue-rotate(-10deg);
+}
+.templates-grid .template-card[data-template="grid3"] .template-preview {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+.templates-grid .template-card[data-template="grid3"] .template-preview .t-cell {
+  border: 1px solid #353535;
+}
+.templates-grid .template-card[data-template="mosaic"] .template-preview .t-cell.wide {
+  grid-column: 1 / -1;
+}
