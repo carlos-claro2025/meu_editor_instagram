@@ -3,25 +3,162 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0e0e0e" />
+  <meta name="description" content="my-story-maker: editor de stories e colagens no navegador. Templates 9:16, filtros por foto, texto, adesivos, camadas e exportação em PNG." />
   <title>my-story-maker</title>
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/layout.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/utils.css" />
+  <link rel="stylesheet" href="css/panels.css" />
+  <link rel="stylesheet" href="css/transform.css" />
+  <link rel="stylesheet" href="css/layers.css" />
+  <style>
+    /* Profissional: scrollbar, selecao, transicoes */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* Tooltip para botoes */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #ddd;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 9999;
+      border: 1px solid #333;
+    }
+
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 99999;
+      flex-direction: column; gap: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #333;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Notificacao toast */
+    #toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #222;
+      color: #f3f3f3;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: 1px solid #333;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 99999;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.toast-success { border-color: #2d6a4f; background: #14301f; color: #b7f7cf; }
+    #toast.toast-error   { border-color: #9d0208; background: #2b0708; color: #ffc9c9; }
+    #toast.toast-info    { border-color: #0050b3; background: #0a1c33; color: #bcdcff; }
+    #toast.toast-warning { border-color: #e09f3e; background: #3a2a0d; color: #ffe1a8; }
+
+    /* Acessibilidade: foco visivel em todos os controles clicaveis */
+    .nav-item:focus-visible,
+    .tab:focus-visible,
+    .quick-btn:focus-visible,
+    .filter-card:focus-visible,
+    .overlay-chip:focus-visible,
+    .ratio-btn:focus-visible,
+    .tpl:focus-visible,
+    .sticker:focus-visible,
+    .layer-item:focus-visible,
+    .btn:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    /* Status bar */
+
+/* Project list modal styles */
+.project-item { display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--line); }
+.project-info { flex:1; }
+.project-name { font-weight:bold; }
+.project-date { font-size:0.8em; color:var(--muted); }
+.project-actions button { margin-left:4px; }
+.btn-sm { padding:4px 8px; font-size:0.8em; }
+
+    .status-bar {
+      height: 28px;
+      background: #0a0a0a;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 16px;
+      font-size: 11px;
+      color: #666;
+    }
+    .status-bar span { display: flex; align-items: center; gap: 4px; }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      display: inline-block;
+    }
+  </style>
 </head>
 <body>
+  <!-- Loading -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="color:#888; font-size:13px;">Carregando editor...</div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast"></div>
   <div class="app">
     <!-- Sidebar esquerda -->
     <aside class="sidebar">
       <div>
         <div class="brand">my-story-maker</div>
-        <div class="project">Projeto • Novo story</div>
+        <div class="project" id="projectName">Novo projeto</div>
+        <div style="display:flex; gap:4px; margin-top:8px;">
+          <button class="btn" id="btnNewProject" data-tooltip="Novo projeto" style="flex:1; font-size:11px; padding:5px 4px;">✚ Novo</button>
+          <button class="btn" id="btnSaveProject" data-tooltip="Salvar projeto no navegador" style="flex:1; font-size:11px; padding:5px 4px;">💾 Salvar</button>
+          <button class="btn" id="btnLoadProject" data-tooltip="Abrir projeto salvo" style="flex:1; font-size:11px; padding:5px 4px;">📂 Abrir</button>
+        </div>
       </div>
-      <div class="nav-item" data-nav="templates"><span class="icon">T</span> Templates</div>
-      <div class="nav-item" data-nav="midia"><span class="icon">M</span> Mídia</div>
-      <div class="nav-item" data-nav="feed"><span class="icon">▦</span> Feed</div>
-      <div class="nav-item" data-nav="elementos"><span class="icon">★</span> Elementos</div>
+      <div class="nav-item active" data-nav="templates"><span class="icon">▦</span> Templates</div>
+      <div class="nav-item" data-nav="midia"><span class="icon">◫</span> Mídia</div>
+      <div class="nav-item" data-nav="elementos"><span class="icon">✱</span> Elementos</div>
       <div class="nav-item" data-nav="texto"><span class="icon">T</span> Texto</div>
       <div class="nav-item" data-nav="musica"><span class="icon">♫</span> Música</div>
       <div style="margin-top:auto;" class="nav-item" data-nav="ajustes"><span class="icon">⚙</span> Ajustes</div>
@@ -30,14 +167,32 @@
     <!-- Centro -->
     <section class="center">
       <header class="topbar">
-        <div style="font-weight:700; font-size:13px; opacity:0.75;">Story • 9:16</div>
+        <div style="font-weight:700; font-size:13px; opacity:0.75;" id="ratioLabel">Story • 9:16</div>
         <div class="actions">
-          <button class="btn" id="clearBtn">Limpar</button>
-          <button class="btn" id="saveBtn">Salvar</button>
-          <button class="btn" id="previewBtn">Pré-visualizar</button>
-          <button class="btn primary" id="exportBtn">Exportar</button>
+          <button class="btn" id="clearBtn" data-tooltip="Limpar tudo">Limpar</button>
+          <div class="export-dropdown">
+            <button class="btn" id="saveBtn" data-tooltip="Salvar o projeto (editável)">Salvar</button>
+            <button class="btn" id="saveDropdownBtn" aria-label="Mais opções de salvamento">▼</button>
+            <div class="export-menu" id="saveMenu" style="display:none;">
+              <div class="export-option" data-save="browser">No navegador</div>
+              <div class="export-option" data-save="json">Arquivo .json</div>
+              <div class="export-option" data-save="import">Abrir .json…</div>
+            </div>
+          </div>
+          <button class="btn" id="previewBtn" data-tooltip="Ver como vai ficar">Pré-visualizar</button>
+          <div class="export-dropdown">
+            <button class="btn primary" id="exportBtn" data-tooltip="Exportar imagem PNG (Ctrl+E)">Exportar</button>
+            <button class="btn primary" id="exportDropdownBtn" aria-label="Mais formatos de exportação">▼</button>
+            <div class="export-menu" id="exportMenu" style="display:none;">
+              <div class="export-option" data-format="png">PNG</div>
+              <div class="export-option" data-format="jpg">JPG</div>
+              <div class="export-option" data-format="webp">WEBP</div>
+            </div>
+          </div>
+          <button class="btn" id="helpBtn" data-tooltip="Atalhos do teclado (?)" aria-label="Atalhos do teclado">?</button>
         </div>
       </header>
+      <input type="file" id="importJsonInput" accept="application/json,.json" style="display:none;" />
       <div class="canvas-wrap">
         <div class="phone" id="phone">
           <div class="overlay-controls">
@@ -49,6 +204,13 @@
           <div id="elements"></div>
         </div>
       </div>
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span><span class="status-dot"></span> Pronto</span>
+        <span id="statusRatio">Proporção: 9:16</span>
+        <span id="statusLayers">Camadas: 0</span>
+        <span id="statusFilters" style="margin-left:auto;"></span>
+      </div>
     </section>
 
     <!-- Direita -->
@@ -57,6 +219,8 @@
         <div class="tabs">
           <div class="tab active" data-panel="filters">Editar</div>
           <div class="tab" data-panel="canvas">Camadas</div>
+       <div class="tab" data-panel="history">Histórico</div>
+       <div class="tab" data-panel="properties">Propriedades</div>
         </div>
       </div>
 
@@ -87,21 +251,37 @@
       <!-- Filtros -->
       <div class="tool-section" id="panel-filters">
         <h3>Filtros</h3>
+        <div id="cellFilterHint" style="font-size:11px; color:var(--accent); margin-bottom:8px; display:none;">
+          ✱ Editando célula <span id="cellFilterHintNum"></span>
+        </div>
         <div class="filters-grid" id="filterGrid">
           <div class="filter-card active" data-filter="none">
-            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="original" />
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="original" title="Original" />
           </div>
-          <div class="filter-card" data-filter="clarea">
-            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="clarea" />
+          <div class="filter-card" data-filter="grayscale">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="preto e branco" title="Preto e Branco" style="filter: grayscale(100%);" />
           </div>
-          <div class="filter-card" data-filter="avella">
-            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="avella" />
+          <div class="filter-card" data-filter="sepia">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="amarelo" title="Amarelo" style="filter: sepia(80%) saturate(150%);" />
           </div>
-          <div class="filter-card" data-filter="por-do-sol">
-            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="por do sol" />
+          <div class="filter-card" data-filter="warm">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="vermelho" title="Mais Vermelho" style="filter: saturate(150%) hue-rotate(-10deg);" />
+          </div>
+          <div class="filter-card" data-filter="vivid">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="vivid" title="Vivid" style="filter: saturate(200%) contrast(110%);" />
+          </div>
+          <div class="filter-card" data-filter="cool">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="cool" title="Cool" style="filter: hue-rotate(20deg) saturate(80%);" />
+          </div>
+          <div class="filter-card" data-filter="dramatic">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="dramatic" title="Dramático" style="filter: contrast(140%) brightness(90%);" />
+          </div>
+          <div class="filter-card" data-filter="fade">
+            <img class="preview-img" src="https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=200&q=80" alt="fade" title="Fade" style="filter: brightness(110%) contrast(90%) saturate(80%);" />
           </div>
         </div>
-        <div style="margin-top:8px; font-size:12px; opacity:0.7;">Aplique um estilo simples</div>
+        <button class="btn" id="trocarFundoBtn" style="width:100%; margin-top:10px; font-size:12px;">🖼 Trocar foto de fundo</button>
+        <input type="file" id="trocarFundoInput" accept="image/jpeg,image/png,image/webp" style="display:none;" />
       </div>
 
       <!-- Ajustes -->
@@ -113,9 +293,44 @@
           <span id="brightnessVal">100</span>
         </div>
         <div class="slider-row">
+          <span>Contraste</span>
+          <input type="range" id="contrast" min="0" max="200" value="100" />
+          <span id="contrastVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span>Exposição</span>
+          <input type="range" id="exposure" min="0" max="200" value="100" />
+          <span id="exposureVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span>Sombras</span>
+          <input type="range" id="shadows" min="0" max="200" value="100" />
+          <span id="shadowsVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span>Luzes</span>
+          <input type="range" id="highlights" min="0" max="200" value="100" />
+          <span id="highlightsVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span>Temperatura</span>
+          <input type="range" id="temperature" min="0" max="200" value="100" />
+          <span id="temperatureVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span>Tint</span>
+          <input type="range" id="tint" min="0" max="200" value="100" />
+          <span id="tintVal">100</span>
+        </div>
+        <div class="slider-row">
           <span>Saturação</span>
           <input type="range" id="saturation" min="0" max="200" value="100" />
           <span id="saturationVal">100</span>
+        </div>
+        <div class="slider-row">
+          <span>Clareza</span>
+          <input type="range" id="clarity" min="0" max="200" value="100" />
+          <span id="clarityVal">100</span>
         </div>
         <div class="slider-row">
           <span>Zoom da foto</span>
@@ -129,10 +344,33 @@
       <div class="tool-section" id="panel-feed">
         <h3>Fotos recentes</h3>
         <div class="feed-upload">
-          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple />
-          <button class="btn" id="uploadBtn">Upload</button>
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" />
+          <button class="btn" id="uploadBtn" style="width:100%;">⬆ Enviar fotos</button>
         </div>
+        <div style="font-size:11px; color:var(--muted); margin-top:6px;">Clique numa foto para inseri-la no canvas.</div>
         <div class="feed-grid" id="feedGrid"></div>
+      </div>
+
+      <!-- Música -->
+      <div class="tool-section" id="panel-musica" style="display:none;">
+        <h3>Música</h3>
+        <div class="music-upload" id="musicUpload">
+          <input type="file" id="musicFileInput" accept="audio/*" style="display:none;" />
+          <button class="btn" id="musicUploadBtn">Upload MP3/WAV</button>
+        </div>
+        <div id="musicPlayer" style="display:none; margin-top:12px;">
+          <div style="font-size:13px; margin-bottom:8px;" id="musicTitle"></div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <button class="btn" id="musicPlayBtn">▶</button>
+            <button class="btn" id="musicStopBtn">⏹</button>
+            <span style="font-size:12px; opacity:0.7;" id="musicDuration">0:00</span>
+          </div>
+          <canvas id="waveformCanvas" width="200" height="60" style="width:100%; height:60px; background:#1e1e1e; border-radius:8px;"></canvas>
+          <div class="slider-row" style="margin-top:10px;">
+            <span>Volume</span>
+            <input type="range" id="musicVolume" min="0" max="100" value="80" />
+          </div>
+        </div>
       </div>
 
       <!-- Adicionar -->
@@ -145,7 +383,7 @@
           </div>
           <div class="quick-btn" data-action="add-sticker">
             <span class="ic">★</span>
-            <span>Sticker</span>
+            <span>Adesivo</span>
           </div>
           <div class="quick-btn" data-action="add-shape">
             <span class="ic">▭</span>
@@ -158,6 +396,66 @@
         </div>
       </div>
 
+      <!-- Camadas -->
+      <div class="tool-section" id="panel-canvas" style="display:none;">
+        <h3>Camadas</h3>
+        <div id="layerList" class="layer-list">
+          <p style="opacity:0.5;font-size:12px;">Nenhuma camada</p>
+        </div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="tool-section" id="panel-history" style="display:none;">
+        <h3>Histórico</h3>
+        <div class="history-controls">
+          <button class="btn" id="btnUndo" disabled title="Desfazer (Ctrl+Z)">↶ Desfazer</button>
+          <button class="btn" id="btnRedo" disabled title="Refazer (Ctrl+Y)">↷ Refazer</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <p style="opacity:0.5;font-size:12px;">Histórico vazio</p>
+        </div>
+      </div>
+
+      <!-- Propriedades -->
+      <div class="tool-section" id="panel-properties" style="display:none;">
+        <h3>Propriedades</h3>
+        <div class="properties-grid">
+          <div class="property-row">
+            <span>X</span>
+            <input type="number" id="propX" value="0">
+          </div>
+          <div class="property-row">
+            <span>Y</span>
+            <input type="number" id="propY" value="0">
+          </div>
+          <div class="property-row">
+            <span>L</span>
+            <input type="number" id="propW" value="100">
+          </div>
+          <div class="property-row">
+            <span>A</span>
+            <input type="number" id="propH" value="50">
+          </div>
+          <div class="property-row">
+            <span>Rot</span>
+            <input type="number" id="propRot" value="0" min="0" max="360">
+          </div>
+          <div class="property-row">
+            <span>Opac</span>
+            <input type="number" id="propOpac" value="100" min="0" max="100">
+          </div>
+        </div>
+        <div class="slider-row" style="margin-top:12px;">
+          <span>Filtro</span>
+          <select id="propFilter">
+            <option value="none">Original</option>
+            <option value="grayscale">P&B</option>
+            <option value="sepia">Amarelo</option>
+            <option value="warm">Vermelho</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Estilo do elemento selecionado -->
       <div class="tool-section" id="panel-style" style="display:none;">
         <h3>Estilo</h3>
@@ -167,11 +465,11 @@
           </div>
           <div class="slider-row">
             <span>Cor</span>
-            <input type="color" id="textColor" value="#3b2417" />
+            <input type="color" id="textColor" value="#ffffff" />
           </div>
           <div class="slider-row">
             <span>Tamanho</span>
-            <input type="range" id="textSize" min="12" max="72" value="26" />
+            <input type="range" id="textSize" min="12" max="120" value="26" />
             <span id="textSizeVal">26</span>
           </div>
           <div class="slider-row">
@@ -187,32 +485,84 @@
             <button class="btn" id="btnItalic" title="Itálico"><i>I</i></button>
             <button class="btn" id="btnUnderline" title="Sublinhado"><u>U</u></button>
             <button class="btn" id="btnAlignLeft" title="Esquerda">≡</button>
-            <button class="btn" id="btnAlignCenter" title="Centro">☰</button>
+            <button class="btn" id="btnAlignCenter" title="Centro">●</button>
             <button class="btn" id="btnAlignRight" title="Direita">≡</button>
           </div>
         </div>
         <div id="otherElementPanel">
           <div class="slider-row">
             <span>Cor</span>
-            <input type="color" id="textColor" value="#3b2417" />
+            <input type="color" id="shapeColor" value="#ffffff" />
           </div>
           <div class="slider-row">
             <span>Tamanho</span>
-            <input type="range" id="textSize" min="12" max="72" value="26" />
-            <span id="textSizeVal">26</span>
+            <input type="range" id="shapeSize" min="10" max="400" value="90" />
+            <span id="shapeSizeVal">90</span>
           </div>
           <div class="slider-row">
-            <span>Fonte</span>
-            <select id="textFont">
-              <option value="ui-serif, Georgia, serif">Serif</option>
-              <option value="ui-sans-serif, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif">Sans</option>
-              <option value="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">Mono</option>
-            </select>
+            <span>Opacidade</span>
+            <input type="range" id="shapeOpacity" min="0" max="100" value="100" />
+            <span id="shapeOpacityVal">100</span>
+          </div>
+          <div class="slider-row">
+            <span>Rotação</span>
+            <input type="range" id="shapeRotation" min="-180" max="180" value="0" />
+            <span id="shapeRotationVal">0</span>
           </div>
         </div>
-        <button class="btn" id="deleteSelectedBtn" style="width:100%; margin-top:8px;">Remover selecionado</button>
+        <div style="display:flex; gap:6px; margin-top:10px;">
+          <button class="btn" id="btnLayerUp" title="Trazer para frente" style="flex:1;">⬆ Frente</button>
+          <button class="btn" id="btnLayerDown" title="Enviar para trás" style="flex:1;">⬇ Trás</button>
+        </div>
+        <button class="btn" id="duplicateSelectedBtn" style="width:100%; margin-top:6px;">⧉ Duplicar (Ctrl+D)</button>
+        <button class="btn" id="deleteSelectedBtn" style="width:100%; margin-top:6px;">🗑 Remover selecionado</button>
       </div>
     </aside>
+  </div>
+
+  <!-- Modal de Projetos -->
+  <div id="projectListModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Meus Projetos</h3>
+        <button class="modal-close" id="modalCloseX">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="projectListContainer"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="modalNewProject">Novo Projeto</button>
+        <button class="btn" id="modalCloseProject">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Atalhos -->
+  <div id="shortcutsModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="shortcutsTitle">Atalhos do teclado</h3>
+        <button class="modal-close" id="shortcutsClose" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-row"><span>Desfazer</span><kbd>Ctrl</kbd> + <kbd>Z</kbd></div>
+        <div class="shortcut-row"><span>Refazer</span><kbd>Ctrl</kbd> + <kbd>Y</kbd></div>
+        <div class="shortcut-row"><span>Duplicar selecionado</span><kbd>Ctrl</kbd> + <kbd>D</kbd></div>
+        <div class="shortcut-row"><span>Salvar projeto</span><kbd>Ctrl</kbd> + <kbd>S</kbd></div>
+        <div class="shortcut-row"><span>Exportar PNG</span><kbd>Ctrl</kbd> + <kbd>E</kbd></div>
+        <div class="shortcut-row"><span>Remover selecionado</span><kbd>Delete</kbd></div>
+        <div class="shortcut-row"><span>Desselecionar</span><kbd>Esc</kbd></div>
+        <div class="shortcut-row"><span>Mover 1px</span><kbd>← ↑ → ↓</kbd></div>
+        <div class="shortcut-row"><span>Mover 10px</span><kbd>Shift</kbd> + <kbd>← ↑ → ↓</kbd></div>
+        <div class="shortcut-row"><span>Travar eixo ao arrastar</span><kbd>Shift</kbd> + arrastar</div>
+        <div class="shortcut-row"><span>Editar texto no canvas</span>duplo clique</div>
+        <div class="shortcut-row"><span>Trocar foto da célula</span>duplo clique</div>
+        <div class="shortcut-row"><span>Esta janela</span><kbd>?</kbd></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="shortcutsCloseFooter">Fechar</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -222,6 +572,11 @@
   <script src="js/drag-drop.js"></script>
   <script src="js/elements.js"></script>
   <script src="js/export.js"></script>
+  <script src="js/music.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/layers.js"></script>
+  <script src="js/resize.js"></script>
+  <script src="js/project.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

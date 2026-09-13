@@ -1,7 +1,26 @@
-.app {
+﻿.app {
   display: grid;
   grid-template-columns: 220px 1fr 320px;
   min-height: 100vh;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+ .app {
+   grid-template-columns: 1fr;
+ }
+ .sidebar {
+   display: none;
+ }
+ .tools {
+   display: none;
+ }
+ .center {
+   flex: 1;
+ }
+ .phone {
+   max-width: 100%;
+ }
 }
 .sidebar {
   background: linear-gradient(180deg, #151515, #0f0f0f);
@@ -64,12 +83,23 @@
   position: absolute;
   inset: 0;
   display: none;
-  pointer-events: none;
+  pointer-events: auto;
+  z-index: 1;
 }
 .grid-cells.show {
   display: grid;
+  z-index: 10;
 }
 #elements {
   position: absolute;
   inset: 0;
+  z-index: 20;
+  /* O container não intercepta cliques: só os elementos dentro dele */
+  pointer-events: none;
+}
+#elements > * {
+  pointer-events: auto;
+}
+#elements > [data-locked="true"] {
+  pointer-events: none;
 }

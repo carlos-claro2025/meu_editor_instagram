@@ -1,0 +1,71 @@
+/* Resize handles — a posição/tamanho vem do JS (position:fixed calculado);
+   aqui ficam só o cursor e o acabamento visual */
+.resize-handle {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.resize-nw { cursor: nwse-resize; }
+.resize-n { cursor: ns-resize; }
+.resize-ne { cursor: nesw-resize; }
+.resize-e { cursor: ew-resize; }
+.resize-se { cursor: nwse-resize; }
+.resize-s { cursor: ns-resize; }
+.resize-sw { cursor: nesw-resize; }
+.resize-w { cursor: ew-resize; }
+
+/* Rotation handle */
+.rotate-handle {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.rotate-handle:active {
+  cursor: grabbing;
+}
+
+/* Snap guides */
+.snap-guide {
+  position: absolute;
+  background: #ff4444;
+  z-index: 998;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.snap-guide.horizontal {
+  height: 1px;
+  width: 100%;
+  left: 0;
+}
+
+.snap-guide.vertical {
+  width: 1px;
+  height: 100%;
+  top: 0;
+}
+
+/* Element selection */
+.el-selected {
+  outline: 1px dashed var(--accent, #e9c46a);
+  outline-offset: 2px;
+}
+
+/* Transform info */
+.transform-info {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  z-index: 1002;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.transform-info.visible {
+  opacity: 1;
+}
