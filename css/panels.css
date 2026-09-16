@@ -256,6 +256,29 @@
   justify-content: flex-end;
 }
 
+/* Grade de adesivos */
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 8px;
+}
+
+.sticker-option {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 28px;
+  line-height: 1;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.sticker-option:hover {
+  transform: scale(1.15);
+  background: rgba(233, 196, 106, 0.15);
+}
+
 /* Project items */
 .project-item {
   display: flex;

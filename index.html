@@ -127,6 +127,9 @@
       color: #666;
     }
     .status-bar span { display: flex; align-items: center; gap: 4px; }
+    @media (max-width: 768px) {
+      .status-bar { gap: 8px; padding: 0 8px; font-size: 10px; overflow-x: auto; white-space: nowrap; }
+    }
     .status-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
@@ -189,6 +192,7 @@
               <div class="export-option" data-format="webp">WEBP</div>
             </div>
           </div>
+          <button class="btn" id="toolsToggle" aria-label="Abrir painel de ferramentas" title="Ferramentas">☰</button>
           <button class="btn" id="helpBtn" data-tooltip="Atalhos do teclado (?)" aria-label="Atalhos do teclado">?</button>
         </div>
       </header>
@@ -214,7 +218,7 @@
     </section>
 
     <!-- Direita -->
-    <aside class="tools">
+    <aside class="tools" id="tools">
       <div class="tool-section">
         <div class="tabs">
           <div class="tab active" data-panel="filters">Editar</div>
@@ -518,6 +522,7 @@
         <button class="btn" id="deleteSelectedBtn" style="width:100%; margin-top:6px;">🗑 Remover selecionado</button>
       </div>
     </aside>
+    <div class="tools-backdrop" id="toolsBackdrop"></div>
   </div>
 
   <!-- Modal de Projetos -->
@@ -561,6 +566,22 @@
       </div>
       <div class="modal-footer">
         <button class="btn" id="shortcutsCloseFooter">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Adesivos -->
+  <div id="stickerModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="stickerTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="stickerTitle">Adesivos</h3>
+        <button class="modal-close" id="stickerClose" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="sticker-grid" id="stickerGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="stickerCloseFooter">Fechar</button>
       </div>
     </div>
   </div>

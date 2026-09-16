@@ -2,26 +2,93 @@
   display: grid;
   grid-template-columns: 220px 1fr 320px;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
- .app {
-   grid-template-columns: 1fr;
- }
- .sidebar {
-   display: none;
- }
- .tools {
-   display: none;
- }
- .center {
-   flex: 1;
- }
- .phone {
-   max-width: 100%;
- }
+/* Tablet: colunas mais estreitas */
+@media (max-width: 1100px) {
+  .app { grid-template-columns: 170px 1fr 280px; }
+  .sidebar { padding: 12px 8px; }
+  .tools { padding: 12px; }
 }
+
+/* Mobile: coluna única, barra de navegação embaixo e ferramentas em drawer */
+@media (max-width: 768px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .center {
+    order: 1;
+    min-height: 0;
+  }
+  .sidebar {
+    order: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-right: none;
+    border-top: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar .brand,
+  .sidebar #projectName { display: none; }
+  .sidebar > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+  }
+  .sidebar > div:first-child > div { margin-top: 0 !important; }
+  .sidebar .nav-item { margin-top: 0 !important; white-space: nowrap; flex: none; }
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  .topbar .actions { flex-wrap: wrap; gap: 6px; }
+  .canvas-wrap { padding: 10px; }
+  .phone {
+    width: min(380px, 100%, calc((100vh - 190px) * 9 / 16));
+    width: min(380px, 100%, calc((100dvh - 190px) * 9 / 16));
+    border-radius: 14px;
+  }
+
+  /* Ferramentas viram um drawer deslizante */
+  .tools {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(340px, 92vw);
+    z-index: 9500;
+    transform: translateX(105%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    border-left: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .tools.open { transform: none; }
+}
+
+/* Botão do drawer: só aparece no mobile */
+#toolsToggle { display: none; }
+@media (max-width: 768px) {
+  #toolsToggle { display: inline-block; }
+}
+
+.tools-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9400;
+  display: none;
+}
+.tools-backdrop.show { display: block; }
 .sidebar {
   background: linear-gradient(180deg, #151515, #0f0f0f);
   border-right: 1px solid var(--line);
@@ -61,8 +128,8 @@
 }
 .phone {
   position: relative;
-  width: 100%;
-  max-width: 380px;
+  width: min(380px, 100%, calc((100vh - 150px) * 9 / 16));
+  width: min(380px, 100%, calc((100dvh - 150px) * 9 / 16));
   aspect-ratio: 9/16;
   border-radius: 22px;
   overflow: hidden;

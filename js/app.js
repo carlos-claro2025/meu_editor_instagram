@@ -70,6 +70,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Garante que o overlay suma depois de todos os modulos
   hideOverlay();
 
+  // Drawer de ferramentas (mobile)
+  const toolsEl = document.getElementById('tools');
+  const toolsBackdrop = document.getElementById('toolsBackdrop');
+  const toolsToggle = document.getElementById('toolsToggle');
+  const mqMobile = window.matchMedia
+    ? window.matchMedia('(max-width: 768px)')
+    : { matches: false, addEventListener: () => {} };
+  const isMobile = () => mqMobile.matches;
+  const setToolsOpen = (open) => {
+    if (!toolsEl) return;
+    toolsEl.classList.toggle('open', open);
+    toolsBackdrop?.classList.toggle('show', open);
+    toolsToggle?.setAttribute('aria-expanded', String(open));
+  };
+  toolsToggle?.addEventListener('click', () => setToolsOpen(!toolsEl.classList.contains('open')));
+  toolsBackdrop?.addEventListener('click', () => setToolsOpen(false));
+  mqMobile.addEventListener('change', (e) => { if (!e.matches) setToolsOpen(false); });
+
   // Navegação por abas
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -78,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const panelMap = { templates: 'templates', midia: 'feed', feed: 'feed', elementos: 'add', texto: 'add', musica: 'musica', ajustes: 'ajustes' };
       const panel = panelMap[item.dataset.nav];
       if (panel) switchTab(panel);
+      // No mobile, a barra de navegação fica embaixo: abre o drawer com o painel escolhido
+      if (isMobile() && panel) setToolsOpen(true);
     });
   });
 
@@ -197,16 +217,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.id === 'shortcutsModal') e.target.style.display = 'none';
   });
 
+  // Modal de adesivos: grade de emojis → Elements.createSticker
+  const STICKERS = ['😀','😂','😍','🥳','😎','🤩','🤔','😢','🔥','✨','⭐','💖',
+    '💯','🎉','🎨','📸','💬','👑','🦋','🌈','🌸','🍕','☕','⚡'];
+  const stickerGrid = document.getElementById('stickerGrid');
+  if (stickerGrid) {
+    STICKERS.forEach(emoji => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sticker-option';
+      b.textContent = emoji;
+      b.title = 'Adicionar adesivo ' + emoji;
+      b.addEventListener('click', () => {
+        Elements.createSticker(emoji);
+        document.getElementById('stickerModal').style.display = 'none';
+        updateStatusBar();
+      });
+      stickerGrid.appendChild(b);
+    });
+  }
+  const closeStickerModal = () => {
+    const m = document.getElementById('stickerModal');
+    if (m) m.style.display = 'none';
+  };
+  document.getElementById('stickerClose')?.addEventListener('click', closeStickerModal);
+  document.getElementById('stickerCloseFooter')?.addEventListener('click', closeStickerModal);
+  document.getElementById('stickerModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'stickerModal') e.target.style.display = 'none';
+  });
+
   // Botões rápidos
   document.querySelectorAll('.quick-btn').forEach(btn => {
     const run = () => {
       switch (btn.dataset.action) {
         case 'add-text': Elements.createText('Título'); break;
-        case 'add-sticker':
-        // Open sticker selection modal
-        const modal = document.getElementById('stickerModal');
-        if (modal) modal.style.display = 'block';
-        break;
+        case 'add-sticker': {
+          // Abrir modal de seleção de adesivos
+          const stickerModal = document.getElementById('stickerModal');
+          if (stickerModal) stickerModal.style.display = 'flex';
+          break;
+        }
         case 'add-shape': Elements.createShape(); break;
         case 'add-line': Elements.createLine(); break;
       }
@@ -348,9 +398,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (e.key === 'Escape') {
       // Modal aberto: Esc fecha o modal antes de mexer na seleção
-      const openModal = [...document.querySelectorAll('#shortcutsModal, #projectListModal')]
+      const openModal = [...document.querySelectorAll('#shortcutsModal, #projectListModal, #stickerModal')]
         .find(m => m.style.display && m.style.display !== 'none');
       if (openModal) { openModal.style.display = 'none'; return; }
+      if (toolsEl && toolsEl.classList.contains('open')) { setToolsOpen(false); return; }
       window.State.selected = null;
       window.State.activeCell = null;
       document.querySelectorAll('.template-cell.selected').forEach(c => c.classList.remove('selected'));
