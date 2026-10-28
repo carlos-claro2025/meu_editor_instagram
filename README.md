@@ -1,7 +1,8 @@
 # my-story-maker
 
-Editor de stories e colagens 9:16 no navegador, com templates, fotos, filtros,
-texto, adesivos, camadas, histórico e exportação de imagens.
+Editor visual de stories e colagens no navegador, com fluxo de trabalho
+semelhante a um editor gráfico: canvas 9:16 ou 1:1, templates, mídia, texto,
+camadas, histórico, projetos locais e exportação.
 
 ## Usar localmente
 
@@ -18,17 +19,32 @@ backend obrigatório.
 ## Recursos
 
 - Templates vazio, grid e mosaico
-- Upload e arraste de imagens para o canvas ou para células
-- Filtros predefinidos e ajustes manuais
-- Texto, formas, linhas e adesivos
-- Camadas, redimensionamento, rotação e histórico
-- Projetos salvos no IndexedDB do navegador
-- Importação/exportação de projetos `.json`
-- Exportação em PNG, JPG e WEBP
-- Camadas com seleção múltipla, grupos, nomes, visibilidade e bloqueio
-- Upload de vídeo para o canvas e música de fundo na pré-visualização
-- Layout responsivo para celular e tablet
-- Cache do app shell para uso offline após o primeiro carregamento
+- Proporções Story 9:16 e Post 1:1
+- Upload e arraste de imagens para o canvas, feed ou células dos templates
+- Upload de vídeos MP4, WebM e QuickTime para o canvas
+- Filtros predefinidos e ajustes de brilho, contraste, exposição, sombras,
+  realces, temperatura, tint, saturação, clareza e zoom
+- Texto editável com cor, tamanho, fonte, negrito, itálico, sublinhado e
+  alinhamento
+- Formas, linhas e adesivos
+- Seleção múltipla com Ctrl/Meta/Shift, selecionar tudo, alinhamento,
+  agrupamento e desagrupamento
+- Camadas com thumbnails, nomes editáveis, ordenação, visibilidade, bloqueio,
+  duplicação e remoção
+- Redimensionamento, rotação e propriedades numéricas X/Y/largura/altura,
+  rotação, opacidade e filtro
+- Histórico com desfazer/refazer e atalhos de teclado
+- Música de fundo com upload, reprodução, pausa, parada, volume, loop,
+  waveform, troca e remoção
+- Projetos salvos no IndexedDB do navegador, com criar, abrir, renomear,
+  excluir e autosave local
+- Importação/exportação de projetos `.json`, incluindo grupos aninhados e
+  imagens incorporadas quando possível
+- Pré-visualização do canvas e exportação em PNG, JPG e WEBP
+- Menus Arquivo, Editar, Imagem, Camada e Visualizar
+- Interface responsiva para celular e tablet, com drawer de ferramentas e
+  suporte a gestos de toque
+- Service worker para cache do app shell e uso offline após o primeiro acesso
 
 ## Validação
 
@@ -70,3 +86,8 @@ imagem, use um arquivo local ou tente novamente em PNG.
 O armazenamento de projetos usa o IndexedDB do navegador e, portanto, é local
 ao perfil e ao dispositivo. Limpar os dados do site pode remover os projetos
 salvos no navegador.
+
+Arquivos de música locais permanecem disponíveis no projeto salvo no mesmo
+perfil do navegador, mas não são incorporados ao JSON exportado. A exportação
+de imagem também não inclui áudio; a música funciona na pré-visualização e no
+projeto editável.
