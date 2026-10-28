@@ -99,13 +99,19 @@
   async embedElementImages(elements) {
     return Promise.all((elements || []).map(async (element) => {
       const wrapper = document.createElement('div');
-      wrapper.innerHTML = element.html || '';
-      const images = Array.from(wrapper.querySelectorAll('img'));
-      for (const img of images) {
-        const src = img.getAttribute('src');
-        if (src) img.setAttribute('src', await this.embedSource(src));
+      if (element.html) {
+        wrapper.innerHTML = element.html;
+        const images = Array.from(wrapper.querySelectorAll('img'));
+        for (const img of images) {
+          const src = img.getAttribute('src');
+          if (src) img.setAttribute('src', await this.embedSource(src));
+        }
       }
-      return { ...element, html: wrapper.innerHTML };
+      return {
+        ...element,
+        html: element.html ? wrapper.innerHTML : element.html,
+        children: await this.embedElementImages(element.children || [])
+      };
     }));
   },
 

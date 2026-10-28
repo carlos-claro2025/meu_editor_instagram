@@ -159,6 +159,18 @@ test.describe('editor mobile', () => {
     expect(result.hasName).toBe(true);
   });
 
+  test('empacota elementos aninhados no JSON do projeto', async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const embedded = await window.Export.embedElementImages([{
+        type: 'group',
+        html: '',
+        children: [{ type: 'image', html: '<img src="data:image/png;base64,AA==">' }]
+      }]);
+      return embedded[0].children.length;
+    });
+    expect(result).toBe(1);
+  });
+
   test('exporta PNG pela interface móvel', async ({ page }) => {
     await page.evaluate(() => {
       window.html2canvas = async () => {
