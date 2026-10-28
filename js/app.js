@@ -16,7 +16,7 @@ function showToast(msg, duration, type) {
   const toast = document.getElementById('toast');
   if (!toast) return;
   toast.textContent = msg;
-  toast.classList.remove('toast-success', 'toast-error', 'toast-info');
+  toast.classList.remove('toast-success', 'toast-error', 'toast-info', 'toast-warning');
   if (type) toast.classList.add('toast-' + type);
   toast.classList.add('show');
   clearTimeout(showToast._t);
@@ -70,6 +70,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // Garante que o overlay suma depois de todos os modulos
   hideOverlay();
 
+  // Mantém foco utilizável nos modais e devolve-o ao controle que os abriu.
+  document.querySelectorAll('.modal').forEach((modal) => {
+    let previousFocus = null;
+    const focusContent = () => {
+      if (modal.style.display === 'none') {
+        previousFocus?.focus?.();
+        return;
+      }
+      previousFocus = document.activeElement;
+      modal.querySelector('.modal-content')?.focus();
+    };
+    new MutationObserver(focusContent).observe(modal, { attributes: true, attributeFilter: ['style'] });
+    modal.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusable = modal.querySelectorAll('button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+  });
+
   // Drawer de ferramentas (mobile)
   const toolsEl = document.getElementById('tools');
   const toolsBackdrop = document.getElementById('toolsBackdrop');
@@ -98,6 +121,33 @@ document.addEventListener('DOMContentLoaded', () => {
       if (panel) switchTab(panel);
       // No mobile, a barra de navegação fica embaixo: abre o drawer com o painel escolhido
       if (isMobile() && panel) setToolsOpen(true);
+    });
+  });
+
+  // Ferramentas rápidas do workspace: abrem o painel correspondente sem
+  // duplicar a lógica da navegação principal.
+  document.querySelectorAll('.tool-rail-btn[data-nav]').forEach(item => {
+    item.addEventListener('click', () => {
+      const panel = item.dataset.nav;
+      if (panel) switchTab(panel);
+      document.querySelectorAll('.nav-item').forEach(nav => {
+        nav.classList.toggle('active', nav.dataset.nav === (panel === 'feed' ? 'midia' : panel));
+      });
+      if (isMobile()) setToolsOpen(true);
+    });
+  });
+
+  document.querySelectorAll('.tool-rail-btn[data-rail-action]').forEach(item => {
+    item.addEventListener('click', () => {
+      const action = item.dataset.railAction;
+      if (action === 'add-text') Elements.createText('Título');
+      if (action === 'add-shape') Elements.createShape();
+      if (action === 'add-line') Elements.createLine();
+      if (action === 'add-sticker') {
+        const stickerModal = document.getElementById('stickerModal');
+        if (stickerModal) stickerModal.style.display = 'flex';
+      }
+      updateStatusBar();
     });
   });
 
@@ -132,6 +182,56 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveMenu) saveMenu.style.display = 'none';
     if (exportMenu) exportMenu.style.display = 'none';
   };
+
+  const workspaceGroups = document.querySelectorAll('.workspace-menu-group');
+  const closeWorkspaceMenus = () => {
+    workspaceGroups.forEach(group => {
+      group.querySelector('.workspace-dropdown')?.classList.remove('open');
+      group.querySelector('[data-workspace-menu]')?.setAttribute('aria-expanded', 'false');
+    });
+  };
+  workspaceGroups.forEach(group => {
+    const trigger = group.querySelector('[data-workspace-menu]');
+    const panel = group.querySelector('.workspace-dropdown');
+    trigger?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = panel?.classList.contains('open');
+      closeWorkspaceMenus();
+      if (!open) {
+        panel?.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  document.querySelectorAll('[data-menu-action]').forEach(item => {
+    item.addEventListener('click', () => {
+      const action = item.dataset.menuAction;
+      closeWorkspaceMenus();
+      const click = (id) => document.getElementById(id)?.click();
+      switch (action) {
+        case 'new': click('btnNewProject'); break;
+        case 'save': Project.saveCurrentProject(); break;
+        case 'save-json': Export.save(); break;
+        case 'import-json': click('importJsonInput'); break;
+        case 'preview': Export.preview(); break;
+        case 'export': click('exportBtn'); break;
+        case 'undo': click('btnUndo'); break;
+        case 'redo': click('btnRedo'); break;
+        case 'duplicate': click('duplicateSelectedBtn'); break;
+        case 'delete': deleteSelected(); break;
+        case 'clear': click('clearBtn'); break;
+        case 'change-background': click('trocarFundoBtn'); break;
+        case 'filters': switchTab('filters'); break;
+        case 'adjustments': switchTab('ajustes'); break;
+        case 'reset-adjustments': click('resetAdjustmentsBtn'); break;
+        case 'layers': switchTab('canvas'); break;
+        case 'layer-up': click('btnLayerUp'); break;
+        case 'layer-down': click('btnLayerDown'); break;
+        case 'toggle-tools': toolsToggle?.click(); break;
+        case 'shortcuts': click('helpBtn'); break;
+      }
+    });
+  });
 
   document.getElementById('saveBtn')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -176,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.export-dropdown')) closeMenus();
+    if (!e.target.closest('.workspace-menu-group')) closeWorkspaceMenus();
   });
 
   document.getElementById('previewBtn')?.addEventListener('click', () => Export.preview());
@@ -273,14 +374,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Upload de fotos
   document.getElementById('uploadBtn')?.addEventListener('click', () => document.getElementById('fileInput')?.click());
-  document.getElementById('fileInput')?.addEventListener('change', (e) => {
+  document.getElementById('fileInput')?.addEventListener('change', async (e) => {
     let added = 0;
-    Array.from(e.target.files).forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      if (file.size > 10 * 1024 * 1024) { showToast('“' + file.name + '” passa de 10 MB', 3000, 'error'); return; }
-      window.State.addFeedImage(URL.createObjectURL(file), file.name);
-      added++;
-    });
+    for (const file of Array.from(e.target.files)) {
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 10 * 1024 * 1024) { showToast('“' + file.name + '” passa de 10 MB', 3000, 'error'); continue; }
+      try {
+        const url = await window.ImageTools.prepareFile(file);
+        window.State.addFeedImage(url, file.name);
+        added++;
+      } catch (error) {
+        console.error(error);
+        showToast('Não foi possível preparar “' + file.name + '”', 2500, 'error');
+      }
+    }
     if (added) showToast(added + (added > 1 ? ' fotos adicionadas' : ' foto adicionada'), 2000, 'success');
     // Permite reescolher o mesmo arquivo depois
     e.target.value = '';
@@ -502,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const el = document.createElement('div');
           el.id = d.id || 'el-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
           el.dataset.el = d.type;
-          if (d.html) el.innerHTML = d.html;
+          if (d.html) el.innerHTML = window.Project?.sanitizeHTML(d.html) || '';
           else el.textContent = d.content || '';
           el.style.cssText = d.style || '';
           if (d.rotation) el.dataset.rotation = d.rotation;
@@ -515,7 +622,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // blob: URLs não sobrevivem ao recarregamento — só restaura data URLs
       if (data.background && data.background.indexOf('blob:') !== 0) {
         const bg = document.getElementById('bg');
-        if (bg) bg.src = data.background;
+        if (bg) {
+          if (/^https?:\/\//i.test(data.background)) bg.crossOrigin = 'anonymous';
+          bg.src = data.background;
+        }
       }
 
       if (data.ratio) {
@@ -578,7 +688,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
+  let autosaveTimer = null;
+  function setAutosaveStatus(text) {
+    window.Project?.setSaveStatus(text);
+  }
+
   function saveAutosave() {
+    setAutosaveStatus('Salvando…');
     try {
       const els = [];
       document.querySelectorAll('#elements > [data-el]').forEach(el => {
@@ -616,11 +732,18 @@ document.addEventListener('DOMContentLoaded', () => {
         payload.cells = payload.cells.map(() => null);
         localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
       }
+      setAutosaveStatus('Salvo automaticamente');
     } catch (e) {
       console.warn('Falha ao salvar auto-save:', e);
+      setAutosaveStatus('Não foi possível salvar');
     }
   }
 
+  window.requestAutosave = () => {
+    clearTimeout(autosaveTimer);
+    setAutosaveStatus('Alterações pendentes');
+    autosaveTimer = setTimeout(saveAutosave, 900);
+  };
   setInterval(saveAutosave, 30000);
   window.addEventListener('beforeunload', saveAutosave);
 

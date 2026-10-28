@@ -19,6 +19,23 @@ window.Project = {
     if (window.showToast) window.showToast(msg, 2200, type);
   },
 
+  sanitizeHTML(html) {
+    if (!html) return '';
+    const template = document.createElement('template');
+    template.innerHTML = String(html);
+    template.content.querySelectorAll('script, iframe, object, embed, link, style, form').forEach(node => node.remove());
+    template.content.querySelectorAll('*').forEach(node => {
+      Array.from(node.attributes).forEach(attr => {
+        const name = attr.name.toLowerCase();
+        const value = attr.value.trim().toLowerCase();
+        if (name.startsWith('on') || ((name === 'src' || name === 'href') && value.startsWith('javascript:'))) {
+          node.removeAttribute(attr.name);
+        }
+      });
+    });
+    return template.innerHTML;
+  },
+
   async openDB() {
     if (typeof indexedDB === 'undefined') throw new Error('IndexedDB not available');
     return new Promise((resolve, reject) => {
@@ -123,6 +140,7 @@ window.Project = {
     const project = await this.saveProject(name.trim(), snapshot);
     this.current = project;
     this.updateProjectLabel();
+    this.setSaveStatus('Salvo agora');
     this.notify(`Projeto "${project.name}" criado`, 'success');
   },
 
@@ -132,7 +150,13 @@ window.Project = {
     const project = await this.saveProject(this.current.name, snapshot, this.current.id);
     this.current = project;
     this.updateProjectLabel();
-    this.notify('My-sotory-makder diz', 'success');
+    this.setSaveStatus('Salvo agora');
+    this.notify('Projeto salvo', 'success');
+  },
+
+  setSaveStatus(text) {
+    const status = document.getElementById('projectSaveStatus');
+    if (status) status.textContent = text;
   },
 
   snapshot() {
@@ -147,7 +171,8 @@ window.Project = {
       ratio: window.State.ratio,
       preset: window.State._preset || 'none',
       filter: window.State.filter || 'none',
-      cellFilters: JSON.parse(JSON.stringify(window.State.cellFilters || {}))
+      cellFilters: JSON.parse(JSON.stringify(window.State.cellFilters || {})),
+      music: window.MusicPlayer?.getSnapshot?.() || null
     };
     this.ADJ_KEYS.forEach(k => { data[k] = window.State[k] ?? 100; });
     return data;
@@ -221,6 +246,7 @@ window.Project = {
     this.current = project;
     this.applySnapshot(project.data || {});
     this.updateProjectLabel();
+    this.setSaveStatus('Projeto carregado');
     const modal = document.getElementById('projectListModal');
     if (modal) modal.style.display = 'none';
     this.notify(`Projeto "${project.name}" carregado`, 'success');
@@ -229,7 +255,10 @@ window.Project = {
   applySnapshot(d) {
     d = d || {};
     const bg = document.getElementById('bg');
-    if (bg && d.background && !d.background.startsWith('blob:')) bg.src = d.background;
+    if (bg && d.background && !d.background.startsWith('blob:')) {
+      if (/^https?:\/\//i.test(d.background)) bg.crossOrigin = 'anonymous';
+      bg.src = d.background;
+    }
     if (d.ratio) {
       window.State.ratio = d.ratio;
       const phone = document.getElementById('phone');
@@ -275,7 +304,7 @@ window.Project = {
         const el = document.createElement('div');
         el.id = elData.id || 'el-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
         el.dataset.el = elData.type;
-        if (elData.html) el.innerHTML = elData.html;
+        if (elData.html) el.innerHTML = this.sanitizeHTML(elData.html);
         else el.textContent = elData.content || '';
         el.style.cssText = elData.style || '';
         if (elData.rotation) el.dataset.rotation = elData.rotation;
@@ -287,6 +316,11 @@ window.Project = {
     if (window.Resize?.hideHandles) window.Resize.hideHandles();
     if (window.Filters?.apply) window.Filters.apply();
     if (window.Filters?.applyAllCellFilters) window.Filters.applyAllCellFilters();
+    if (window.MusicPlayer?.restoreSnapshot) {
+      window.MusicPlayer.restoreSnapshot(d.music || null).catch(error => {
+        console.error('Não foi possível restaurar a música de fundo:', error);
+      });
+    }
     if (bg) bg.style.transform = `scale(${(window.State.zoom || 100) / 100})`;
     if (window.Layers?.render) window.Layers.render();
     if (typeof updateStatusBar === 'function') updateStatusBar();

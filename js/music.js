@@ -5,6 +5,7 @@
   let sourceNode = null;
   let animationId = null;
   let isPlaying = false;
+  let sourceBlob = null;
 
   function playBtnEl() { return document.getElementById('musicPlayBtn'); }
 
@@ -14,6 +15,8 @@
     const playBtn = document.getElementById('musicPlayBtn');
     const stopBtn = document.getElementById('musicStopBtn');
     const volumeSlider = document.getElementById('musicVolume');
+    const loopCheckbox = document.getElementById('musicLoop');
+    const removeBtn = document.getElementById('musicRemoveBtn');
 
     if (uploadBtn && fileInput) {
       uploadBtn.addEventListener('click', () => fileInput.click());
@@ -37,9 +40,14 @@
         setVolume(Number(e.target.value) / 100);
       });
     }
+    loopCheckbox?.addEventListener('change', (e) => {
+      if (audio) audio.loop = e.target.checked;
+    });
+    removeBtn?.addEventListener('click', removeMusic);
   }
 
   function loadMusic(file) {
+    sourceBlob = file;
     stopMusic();
 
     // Sem esta limpeza, cada upload criava um AudioContext novo (o navegador
@@ -60,13 +68,16 @@
     const url = URL.createObjectURL(file);
     audio.src = url;
     audio.dataset.blobUrl = url;
+    audio.loop = document.getElementById('musicLoop')?.checked !== false;
 
     const titleEl = document.getElementById('musicTitle');
     if (titleEl) titleEl.textContent = file.name.replace(/\.[^/.]+$/, '');
     const playerEl = document.getElementById('musicPlayer');
     if (playerEl) playerEl.style.display = 'block';
     const uploadEl = document.getElementById('musicUpload');
-    if (uploadEl) uploadEl.style.display = 'none';
+    const uploadBtn = document.getElementById('musicUploadBtn');
+    if (uploadEl) uploadEl.style.display = 'block';
+    if (uploadBtn) uploadBtn.textContent = 'Trocar música';
 
     setupAudioContext();
 
@@ -83,6 +94,7 @@
     });
 
     audio.addEventListener('ended', () => {
+      if (audio.loop) return;
       isPlaying = false;
       const btn = playBtnEl();
       if (btn) btn.textContent = '▶';
@@ -158,6 +170,48 @@
     }
   }
 
+  function removeMusic() {
+      stopMusic();
+      if (audio?.dataset?.blobUrl) {
+        try { URL.revokeObjectURL(audio.dataset.blobUrl); } catch (e) {}
+      }
+      if (audio) audio.src = '';
+      audio = null;
+      sourceBlob = null;
+      const player = document.getElementById('musicPlayer');
+      const upload = document.getElementById('musicUpload');
+      if (player) player.style.display = 'none';
+      if (upload) upload.style.display = 'block';
+      const uploadBtn = document.getElementById('musicUploadBtn');
+      if (uploadBtn) uploadBtn.textContent = 'Upload MP3/WAV';
+      if (window.showToast) window.showToast('Música de fundo removida', 1800, 'info');
+    }
+
+  async function restoreSnapshot(snapshot) {
+      if (!snapshot?.blob) {
+        if (snapshot?.name) {
+          const title = document.getElementById('musicTitle');
+          if (title) title.textContent = snapshot.name;
+        }
+        return;
+      }
+      const loop = document.getElementById('musicLoop');
+      if (loop) loop.checked = snapshot.loop !== false;
+      const volume = document.getElementById('musicVolume');
+      if (volume && Number.isFinite(snapshot.volume)) volume.value = Math.round(snapshot.volume * 100);
+      loadMusic(snapshot.blob);
+    }
+
+  function getSnapshot() {
+      if (!sourceBlob) return null;
+      return {
+        name: sourceBlob.name || document.getElementById('musicTitle')?.textContent || 'Música',
+        blob: sourceBlob,
+        volume: audio ? audio.volume : (Number(document.getElementById('musicVolume')?.value) || 80) / 100,
+        loop: audio ? audio.loop : document.getElementById('musicLoop')?.checked !== false
+      };
+  }
+
   function formatTime(seconds) {
     if (isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
@@ -221,7 +275,7 @@
     }
   }
 
-  return { init };
+  return { init, getSnapshot, restoreSnapshot, removeMusic };
 })();
 window.MusicPlayer = MusicPlayer;
 window.Music = MusicPlayer;
