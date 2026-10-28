@@ -25,6 +25,8 @@ backend obrigatório.
 - Projetos salvos no IndexedDB do navegador
 - Importação/exportação de projetos `.json`
 - Exportação em PNG, JPG e WEBP
+- Camadas com seleção múltipla, grupos, nomes, visibilidade e bloqueio
+- Upload de vídeo para o canvas e música de fundo na pré-visualização
 - Layout responsivo para celular e tablet
 - Cache do app shell para uso offline após o primeiro carregamento
 
@@ -51,8 +53,11 @@ npm run test:e2e:mobile
 ```
 
 Os testes validam carregamento responsivo, troca de proporção, drawer de
-ferramentas, upload, drag-and-drop, undo/redo e exportação. Evidências de
-falha ficam em `test-results/` como screenshot, vídeo e trace.
+ferramentas, upload de imagens e vídeos, drag-and-drop, seleção/agrupamento,
+restauração de projetos, undo/redo e exportação. Evidências de falha ficam em
+`test-results/` como screenshot, vídeo e trace. O workflow
+`.github/workflows/validate.yml` executa a validação de sintaxe a cada push e
+pull request.
 
 ## Limitações conhecidas
 
