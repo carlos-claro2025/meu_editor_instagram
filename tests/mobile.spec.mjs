@@ -122,6 +122,32 @@ test.describe('editor mobile', () => {
     await expect(page.locator('#elements > [data-group="true"]')).toHaveCount(0);
   });
 
+  test('preserva grupos e camadas ao restaurar o projeto', async ({ page }) => {
+    await page.locator('[data-nav="texto"]').click();
+    await page.locator('[data-action="add-text"]').click();
+    await page.locator('[data-nav="elementos"]').click({ force: true });
+    await page.locator('[data-action="add-shape"]').click({ force: true });
+
+    const result = await page.evaluate(() => {
+      window.switchTab('style');
+      document.getElementById('selectAllBtn').click();
+      document.getElementById('groupSelectedBtn').click();
+      const group = document.querySelector('#elements > [data-group="true"]');
+      group.dataset.name = 'Composição';
+      const snapshot = window.Project.snapshot();
+      window.Project.applySnapshot(snapshot);
+      return {
+        children: document.querySelector('#elements > [data-group="true"]')?.children.length || 0,
+        layers: document.querySelectorAll('#layerList .layer-item').length,
+        hasName: [...document.querySelectorAll('#layerList .layer-name')].some(node => node.textContent === 'Composição')
+      };
+    });
+
+    expect(result.children).toBe(2);
+    expect(result.layers).toBe(3);
+    expect(result.hasName).toBe(true);
+  });
+
   test('exporta PNG pela interface móvel', async ({ page }) => {
     await page.evaluate(() => {
       window.html2canvas = async () => {

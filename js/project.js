@@ -179,18 +179,19 @@ window.Project = {
   },
 
   collectElements() {
-    const elements = [];
-    document.querySelectorAll('#elements > [data-el]').forEach(el => {
-      elements.push({
-        id: el.id,
-        type: el.dataset.el,
-        html: el.innerHTML,
-        style: el.style.cssText,
-        rotation: el.dataset.rotation || '',
-        locked: el.dataset.locked === 'true'
-      });
+    const serialize = el => ({
+      id: el.id,
+      type: el.dataset.el,
+      html: el.dataset.group === 'true' ? '' : el.innerHTML,
+      content: el.dataset.group === 'true' ? '' : el.textContent,
+      style: el.style.cssText,
+      rotation: el.dataset.rotation || '',
+      locked: el.dataset.locked === 'true',
+      visible: el.dataset.visible !== 'false',
+      name: el.dataset.name || '',
+      children: el.dataset.group === 'true' ? Array.from(el.children).map(serialize) : []
     });
-    return elements;
+    return Array.from(document.querySelectorAll('#elements > [data-el]')).map(serialize);
   },
 
   async showProjectList() {
@@ -300,18 +301,26 @@ window.Project = {
     const elementsContainer = document.getElementById('elements');
     if (elementsContainer) {
       elementsContainer.innerHTML = '';
-      (d.elements || []).forEach(elData => {
+      const restore = elData => {
         const el = document.createElement('div');
         el.id = elData.id || 'el-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
         el.dataset.el = elData.type;
+        if (elData.name) el.dataset.name = elData.name;
+        if (elData.type === 'group') el.dataset.group = 'true';
         if (elData.html) el.innerHTML = this.sanitizeHTML(elData.html);
-        else el.textContent = elData.content || '';
+        else if (elData.content) el.textContent = elData.content;
         el.style.cssText = elData.style || '';
         if (elData.rotation) el.dataset.rotation = elData.rotation;
         if (elData.locked) el.dataset.locked = 'true';
-        elementsContainer.appendChild(el);
+        if (elData.visible === false) {
+          el.dataset.visible = 'false';
+          el.style.display = 'none';
+        }
+        (elData.children || []).forEach(child => el.appendChild(restore(child)));
         if (window.Elements?.hydrate) window.Elements.hydrate(el);
-      });
+        return el;
+      };
+      (d.elements || []).forEach(elData => elementsContainer.appendChild(restore(elData)));
     }
     if (window.Resize?.hideHandles) window.Resize.hideHandles();
     if (window.Filters?.apply) window.Filters.apply();

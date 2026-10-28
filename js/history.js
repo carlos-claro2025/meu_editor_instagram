@@ -74,20 +74,20 @@ window.History = {
     'temperature', 'tint', 'saturation', 'clarity', 'zoom'],
 
   captureState() {
-    const elements = [];
-    document.querySelectorAll('#elements > [data-el]').forEach(el => {
-      elements.push({
+    const serialize = el => ({
         id: el.id,
         type: el.dataset.el,
-        html: el.innerHTML,
-        text: el.childElementCount === 0 ? el.textContent : '',
+        html: el.dataset.group === 'true' ? '' : el.innerHTML,
+        text: el.dataset.group === 'true' ? '' : el.textContent,
         style: el.style.cssText,
         className: (el.className || '').replace(/\bel-selected\b/g, '').trim(),
         rotation: el.dataset.rotation || '',
         locked: el.dataset.locked === 'true',
-        visible: el.dataset.visible !== 'false'
+        visible: el.dataset.visible !== 'false',
+        name: el.dataset.name || '',
+        children: el.dataset.group === 'true' ? Array.from(el.children).map(serialize) : []
       });
-    });
+    const elements = Array.from(document.querySelectorAll('#elements > [data-el]')).map(serialize);
 
     const adjustments = {};
     this.ADJUST_KEYS.forEach(k => {
@@ -130,10 +130,12 @@ window.History = {
       elementsContainer.innerHTML = '';
 
       if (state.elements) {
-        state.elements.forEach(elData => {
+        const restore = elData => {
           const el = document.createElement('div');
           el.id = elData.id || 'el-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
           el.dataset.el = elData.type;
+          if (elData.name) el.dataset.name = elData.name;
+          if (elData.type === 'group') el.dataset.group = 'true';
           if (elData.className) el.className = elData.className;
           if (elData.html) el.innerHTML = window.Project?.sanitizeHTML(elData.html) || '';
           else if (elData.text) el.textContent = elData.text;
@@ -144,10 +146,12 @@ window.History = {
             el.dataset.visible = 'false';
             el.style.display = 'none';
           }
-          elementsContainer.appendChild(el);
+          (elData.children || []).forEach(child => el.appendChild(restore(child)));
           // Sem isto os elementos restaurados ficam imóveis
           if (window.Elements?.hydrate) window.Elements.hydrate(el);
-        });
+          return el;
+        };
+        state.elements.forEach(elData => elementsContainer.appendChild(restore(elData)));
       }
     }
 

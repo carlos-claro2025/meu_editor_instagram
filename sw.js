@@ -1,4 +1,4 @@
-const CACHE = 'my-story-maker-v4';
+const CACHE = 'my-story-maker-v5';
 const APP_SHELL = [
   './',
   './index.html',
