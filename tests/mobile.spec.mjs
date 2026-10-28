@@ -72,6 +72,17 @@ test.describe('editor mobile', () => {
     await expect(page.locator('#elements > [data-el="image"], #gridCells .cell-img')).toHaveCount(1);
   });
 
+  test('insere vídeo por upload no canvas', async ({ page }) => {
+    await page.locator('[data-nav="midia"]').click();
+    await page.locator('#videoFileInput').setInputFiles({
+      name: 'video-teste.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from([0, 0, 0, 24, 102, 116, 121, 112])
+    });
+    await expect(page.locator('#elements > [data-el="video"]')).toHaveCount(1);
+    await expect(page.locator('#elements > [data-el="video"] video')).toHaveAttribute('controls', '');
+  });
+
   test('simula drag-and-drop de imagem no canvas', async ({ page }) => {
     await page.evaluate(async (png) => {
       const bytes = Uint8Array.from(atob(png), char => char.charCodeAt(0));

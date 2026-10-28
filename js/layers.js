@@ -79,7 +79,7 @@ window.Layers = {
   },
 
   getTypeIcon(type) {
-    const icons = { text: 'T', sticker: '★', shape: '■', line: '/', image: '🖼', group: '▰' };
+    const icons = { text: 'T', sticker: '★', shape: '■', line: '/', image: '🖼', video: '▶', group: '▰' };
     return icons[type] || '?';
   },
 

@@ -424,6 +424,10 @@
           <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" />
           <button class="btn" id="uploadBtn" style="width:100%;">⬆ Enviar fotos</button>
         </div>
+        <div class="feed-upload" style="margin-top:8px;">
+          <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/quicktime" style="display:none;" />
+          <button class="btn" id="uploadVideoBtn" style="width:100%;">▶ Enviar vídeo</button>
+        </div>
         <div style="font-size:11px; color:var(--muted); margin-top:6px;">Clique numa foto para inseri-la no canvas.</div>
         <div class="feed-grid" id="feedGrid"></div>
       </div>
@@ -687,7 +691,7 @@
   <script src="js/layers.js?v=step2"></script>
   <script src="js/resize.js?v=step1"></script>
   <script src="js/project.js?v=step2"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=step3"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));

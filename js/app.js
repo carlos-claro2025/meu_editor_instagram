@@ -393,6 +393,21 @@ document.addEventListener('DOMContentLoaded', () => {
     e.target.value = '';
   });
 
+  document.getElementById('uploadVideoBtn')?.addEventListener('click', () => document.getElementById('videoFileInput')?.click());
+  document.getElementById('videoFileInput')?.addEventListener('change', (e) => {
+    const file = Array.from(e.target.files || [])[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      showToast('O vídeo passa de 50 MB', 3000, 'error');
+    } else if (!file.type.startsWith('video/')) {
+      showToast('Selecione um arquivo de vídeo', 2500, 'error');
+    } else {
+      window.DragDrop?.addVideo(URL.createObjectURL(file), file.name);
+      showToast('Vídeo inserido no canvas', 1800, 'success');
+    }
+    e.target.value = '';
+  });
+
   // Propriedades do elemento (X/Y são o canto superior esquerdo, como mostrado no painel)
   const applyProp = (id, rawVal) => {
     const el = window.State.selected;

@@ -145,5 +145,34 @@ window.DragDrop = {
     if (typeof updateStatusBar === 'function') updateStatusBar();
     if (!options.silent && window.showToast) window.showToast('Foto inserida no canvas', 1500, 'success');
     return wrap;
+  },
+
+  addVideo(url, name = 'Vídeo') {
+    const container = document.getElementById('elements');
+    if (!container) return null;
+    const wrap = document.createElement('div');
+    wrap.dataset.el = 'video';
+    wrap.dataset.name = name;
+    wrap.id = 'el-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    wrap.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:80%;height:45%;overflow:hidden;border-radius:8px;cursor:move;background:#000;';
+    const video = document.createElement('video');
+    video.src = url;
+    video.controls = true;
+    video.autoplay = false;
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'none';
+    video.style.cssText = 'width:100%;height:100%;display:block;object-fit:cover;pointer-events:none;';
+    wrap.appendChild(video);
+    container.appendChild(wrap);
+    if (window.Elements?.hydrate) window.Elements.hydrate(wrap);
+    window.State.selectedElements = [wrap];
+    window.State.selected = wrap;
+    if (window.Resize?.showHandles) window.Resize.showHandles(wrap);
+    if (window.Layers?.render) window.Layers.render();
+    if (window.History?.push) window.History.push('add-element');
+    if (typeof updateStatusBar === 'function') updateStatusBar();
+    return wrap;
   }
 };
