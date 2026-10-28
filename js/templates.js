@@ -98,7 +98,7 @@
       cell.appendChild(input);
 
       // Quando selecionar arquivo
-      input.addEventListener('change', (e) => {
+      input.addEventListener('change', async (e) => {
         const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
         e.target.value = '';
         if (files.length === 0) return;
@@ -108,12 +108,20 @@
         // células vazias seguintes.
         const cells = Array.from(grid.querySelectorAll('.template-cell'));
         let placed = 0;
-        files.forEach((file, i) => {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
           if (file.size > 10 * 1024 * 1024) {
             if (window.showToast) window.showToast('"' + file.name + '" passa de 10 MB', 3000, 'error');
             return;
           }
-          const url = URL.createObjectURL(file);
+          let url;
+          try {
+            url = await window.ImageTools.prepareFile(file);
+          } catch (error) {
+            console.error(error);
+            if (window.showToast) window.showToast('Não foi possível preparar "' + file.name + '"', 2500, 'error');
+            continue;
+          }
           window.State.addFeedImage(url, file.name);
           let targetIndex = index;
           if (i > 0) {
@@ -122,7 +130,7 @@
           }
           this.addImageToCell(targetIndex, url);
           placed++;
-        });
+        }
 
         if (!placed) return;
         if (window.showToast) {
@@ -208,6 +216,7 @@
     // Adicionar nova imagem
     const img = document.createElement('img');
     img.className = 'cell-img';
+    if (/^https?:\/\//i.test(imageUrl)) img.crossOrigin = 'anonymous';
     img.src = imageUrl;
     img.style.cssText = `
       position: absolute;

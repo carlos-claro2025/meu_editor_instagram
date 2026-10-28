@@ -341,6 +341,7 @@ const Elements = (() => {
     if (window.Resize?.showHandles) window.Resize.showHandles(el);
     if (window.Layers?.render) window.Layers.render();
     if (typeof updateStatusBar === 'function') updateStatusBar();
+    if (window.History?.push && !opts?.skipHistory) window.History.push('add-element');
     if (!opts?.silent && window.showToast) window.showToast(opts?.message || 'Elemento adicionado', 1400, 'success');
     return el;
   }

@@ -135,7 +135,7 @@ window.History = {
           el.id = elData.id || 'el-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
           el.dataset.el = elData.type;
           if (elData.className) el.className = elData.className;
-          if (elData.html) el.innerHTML = elData.html;
+          if (elData.html) el.innerHTML = window.Project?.sanitizeHTML(elData.html) || '';
           else if (elData.text) el.textContent = elData.text;
           el.style.cssText = elData.style || '';
           if (elData.rotation) el.dataset.rotation = elData.rotation;
@@ -233,6 +233,7 @@ window.History = {
 
     this.updateUI();
     this.renderList();
+    window.requestAutosave?.();
   },
 
   undo() {

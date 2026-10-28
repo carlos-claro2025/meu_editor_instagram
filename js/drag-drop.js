@@ -39,7 +39,7 @@ window.DragDrop = {
       }
     });
 
-    phone.addEventListener('drop', (e) => {
+    phone.addEventListener('drop', async (e) => {
       if (!hasFiles(e)) return;
       e.preventDefault();
       phone.classList.remove('drop-active');
@@ -54,12 +54,20 @@ window.DragDrop = {
 
       const cellIndex = cell ? Number(cell.dataset.cellIndex) : null;
       let inserted = 0;
-      files.forEach((file, i) => {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         if (file.size > 10 * 1024 * 1024) {
           if (window.showToast) window.showToast('"' + file.name + '" passa de 10 MB', 3000, 'error');
           return;
         }
-        const url = URL.createObjectURL(file);
+        let url;
+        try {
+          url = await window.ImageTools.prepareFile(file);
+        } catch (error) {
+          console.error(error);
+          if (window.showToast) window.showToast('Não foi possível preparar "' + file.name + '"', 2500, 'error');
+          continue;
+        }
         window.State.addFeedImage(url, file.name);
         if (cellIndex !== null) {
           if (i === 0) {
@@ -70,7 +78,7 @@ window.DragDrop = {
           this.addImage(url, { silent: true });
           inserted++;
         }
-      });
+      }
 
       if (inserted && window.showToast) {
         const msg = cellIndex !== null
@@ -119,6 +127,7 @@ window.DragDrop = {
     `;
 
     const img = document.createElement('img');
+    if (/^https?:\/\//i.test(url)) img.crossOrigin = 'anonymous';
     img.src = url;
     img.draggable = false;
     img.alt = 'Foto inserida';

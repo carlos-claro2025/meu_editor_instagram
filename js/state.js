@@ -45,6 +45,7 @@ window.State = {
 
       // createElement em vez de innerHTML: nome do arquivo não vira HTML
       const img = document.createElement('img');
+      if (/^https?:\/\//i.test(url)) img.crossOrigin = 'anonymous';
       img.src = url;
       img.alt = name;
       img.loading = 'lazy';
