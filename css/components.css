@@ -261,6 +261,19 @@ input[type=range] {
   justify-content: center;
   opacity: 0.85;
 }
+.selection-tools,
+.align-tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.selection-tools .btn,
+.align-tools .btn {
+  min-width: 0;
+  padding: 7px 5px;
+  font-size: 11px;
+}
 .actions {
   display: flex;
   gap: 8px;

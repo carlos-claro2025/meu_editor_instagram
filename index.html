@@ -538,6 +538,19 @@
       <!-- Estilo do elemento selecionado -->
       <div class="tool-section" id="panel-style" style="display:none;">
         <h3>Estilo</h3>
+        <div class="selection-tools" aria-label="Ferramentas de seleção">
+          <button class="btn" id="selectAllBtn" type="button">Selecionar tudo</button>
+          <button class="btn" id="groupSelectedBtn" type="button">Agrupar</button>
+          <button class="btn" id="ungroupSelectedBtn" type="button">Desagrupar</button>
+        </div>
+        <div class="align-tools" aria-label="Alinhamento">
+          <button class="btn" data-align="left" type="button" title="Alinhar à esquerda">⇤</button>
+          <button class="btn" data-align="center" type="button" title="Centralizar horizontalmente">↔</button>
+          <button class="btn" data-align="right" type="button" title="Alinhar à direita">⇥</button>
+          <button class="btn" data-align="top" type="button" title="Alinhar ao topo">⇡</button>
+          <button class="btn" data-align="middle" type="button" title="Centralizar verticalmente">↕</button>
+          <button class="btn" data-align="bottom" type="button" title="Alinhar à base">⇣</button>
+        </div>
         <div id="textEditorPanel" style="display:none;">
           <div style="margin-bottom:8px;">
             <textarea id="textContent" rows="3" placeholder="Digite seu texto..." style="width:100%; background:#1e1e1e; border:1px solid #2e2e2e; border-radius:8px; padding:8px; color:#f3f3f3; resize:vertical;"></textarea>
@@ -663,16 +676,16 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="js/image-tools.js"></script>
-  <script src="js/state.js"></script>
+  <script src="js/state.js?v=step1"></script>
   <script src="js/filters.js"></script>
   <script src="js/templates.js"></script>
   <script src="js/drag-drop.js"></script>
-  <script src="js/elements.js"></script>
+  <script src="js/elements.js?v=step1"></script>
   <script src="js/export.js"></script>
   <script src="js/music.js?v=4"></script>
   <script src="js/history.js"></script>
   <script src="js/layers.js"></script>
-  <script src="js/resize.js"></script>
+  <script src="js/resize.js?v=step1"></script>
   <script src="js/project.js"></script>
   <script src="js/app.js"></script>
   <script>

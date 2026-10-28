@@ -98,6 +98,30 @@ test.describe('editor mobile', () => {
     await expect(page.locator('#elements > [data-el="text"]')).toHaveCount(1);
   });
 
+  test('seleciona, alinha, agrupa e desagrupa elementos', async ({ page }) => {
+    await page.locator('[data-nav="texto"]').click();
+    await page.locator('[data-action="add-text"]').click();
+    await page.locator('[data-nav="elementos"]').click({ force: true });
+    await page.locator('[data-action="add-shape"]').click({ force: true });
+
+    await page.evaluate(() => {
+      window.switchTab('style');
+      document.getElementById('selectAllBtn').click();
+    });
+    await expect.poll(() => page.evaluate(() => window.State.selectedElements.length)).toBe(2);
+
+    await page.evaluate(() => document.querySelector('[data-align="center"]').click());
+    const centered = await page.evaluate(() =>
+      [...window.State.selectedElements].map(element => element.offsetLeft)
+    );
+    expect(new Set(centered).size).toBe(1);
+
+    await page.evaluate(() => document.getElementById('groupSelectedBtn').click());
+    await expect(page.locator('#elements > [data-group="true"]')).toHaveCount(1);
+    await page.evaluate(() => document.getElementById('ungroupSelectedBtn').click());
+    await expect(page.locator('#elements > [data-group="true"]')).toHaveCount(0);
+  });
+
   test('exporta PNG pela interface móvel', async ({ page }) => {
     await page.evaluate(() => {
       window.html2canvas = async () => {

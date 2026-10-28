@@ -126,6 +126,21 @@ const Elements = (() => {
       if (el) {
         if (el.dataset.locked === 'true') return;
         e.stopPropagation();
+        const additive = e.ctrlKey || e.metaKey || e.shiftKey;
+        if (additive) {
+          const current = window.State.selectedElements || [];
+          const next = current.includes(el)
+            ? current.filter(item => item !== el)
+            : current.concat(el);
+          window.State.selectedElements = next;
+          window.State.selected = next[next.length - 1] || null;
+          next.forEach(item => item.classList.add('el-selected'));
+          if (!next.includes(el)) el.classList.remove('el-selected');
+          if (window.Resize?.showMultiHandles) window.Resize.showMultiHandles(next);
+          if (window.Layers?.render) window.Layers.render();
+          return;
+        }
+        window.State.selectedElements = [el];
         window.State.selected = el;
         panel.style.display = 'block';
         if (el.dataset.el === 'text') {
@@ -164,6 +179,7 @@ const Elements = (() => {
       if (e.target.closest('.side')) return;
       if (e.target.closest('.topbar')) return;
       window.State.selected = null;
+      window.State.selectedElements = [];
       panel.style.display = 'none';
       const props = document.getElementById('panel-properties');
       if (props) props.style.display = 'none';
@@ -174,6 +190,73 @@ const Elements = (() => {
     initShapePanel();
     initLayerButtons();
     initRotation();
+    initSelectionTools();
+  }
+
+  function initSelectionTools() {
+    const getSelected = () => {
+      const selected = window.State.selectedElements || [];
+      return selected.length ? selected : (window.State.selected ? [window.State.selected] : []);
+    };
+    document.getElementById('selectAllBtn')?.addEventListener('click', () => {
+      const all = Array.from(document.querySelectorAll('#elements > [data-el]:not([data-locked="true"])'));
+      window.State.selectedElements = all;
+      window.State.selected = all[all.length - 1] || null;
+      all.forEach(el => el.classList.add('el-selected'));
+      if (window.Resize?.showMultiHandles) window.Resize.showMultiHandles(all);
+      if (window.Layers?.render) window.Layers.render();
+    });
+    document.getElementById('groupSelectedBtn')?.addEventListener('click', () => {
+      const selected = getSelected();
+      if (selected.length < 2) return window.showToast?.('Selecione pelo menos dois elementos', 1800, 'info');
+      const group = document.createElement('div');
+      group.dataset.el = 'group';
+      group.dataset.group = 'true';
+      group.className = 'element-group';
+      group.style.cssText = 'position:absolute; inset:0; pointer-events:none;';
+      const container = document.getElementById('elements');
+      selected.forEach(el => group.appendChild(el));
+      container.appendChild(group);
+      window.State.selectedElements = [group];
+      window.State.selected = group;
+      window.Layers?.render();
+      window.History?.push('group');
+    });
+    document.getElementById('ungroupSelectedBtn')?.addEventListener('click', () => {
+      const selected = getSelected();
+      const group = selected.find(el => el.dataset.group === 'true');
+      if (!group) return window.showToast?.('Selecione um grupo primeiro', 1800, 'info');
+      const container = document.getElementById('elements');
+      Array.from(group.children).forEach(el => container.appendChild(el));
+      group.remove();
+      window.State.selectedElements = [];
+      window.State.selected = null;
+      window.Resize?.hideHandles();
+      window.Layers?.render();
+      window.History?.push('ungroup');
+    });
+    document.querySelectorAll('[data-align]').forEach(button => {
+      button.addEventListener('click', () => {
+        const selected = getSelected();
+        if (!selected.length) return window.showToast?.('Selecione elementos primeiro', 1800, 'info');
+        const phone = document.getElementById('phone')?.getBoundingClientRect();
+        if (!phone) return;
+        const rects = selected.map(el => ({ el, rect: el.getBoundingClientRect() }));
+        const mode = button.dataset.align;
+        const left = Math.min(...rects.map(item => item.rect.left));
+        const right = Math.max(...rects.map(item => item.rect.right));
+        const top = Math.min(...rects.map(item => item.rect.top));
+        const bottom = Math.max(...rects.map(item => item.rect.bottom));
+        rects.forEach(({ el, rect }) => {
+          const x = mode === 'left' ? phone.left : mode === 'right' ? phone.right - rect.width : mode === 'center' ? phone.left + (phone.width - rect.width) / 2 : rect.left;
+          const y = mode === 'top' ? phone.top : mode === 'bottom' ? phone.bottom - rect.height : mode === 'middle' ? phone.top + (phone.height - rect.height) / 2 : rect.top;
+          if (['left', 'right', 'center'].includes(mode)) el.style.left = (x - phone.left + rect.width / 2) + 'px';
+          if (['top', 'bottom', 'middle'].includes(mode)) el.style.top = (y - phone.top + rect.height / 2) + 'px';
+        });
+        window.Resize?.reposition();
+        window.History?.push('align');
+      });
+    });
   }
 
   function initLayerButtons() {

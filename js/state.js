@@ -15,6 +15,9 @@ window.State = {
   clarity: 100,
   ratio: '9:16',
   selected: null,
+  selectedElements: [],
+  snapToGrid: true,
+  showGuides: true,
   activeCell: null,         // célula atualmente selecionada para filtro individual
   cellFilters: {},          // { "0": {filter,brightness,...}, ... }
   feedImages: new Map(),

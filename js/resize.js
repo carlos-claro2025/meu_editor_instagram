@@ -94,6 +94,29 @@ window.Resize = {
     this.updatePropertiesPanel();
   },
 
+  showMultiHandles(elements) {
+    const list = (elements || []).filter(el => el && el.isConnected);
+    if (!list.length) return this.hideHandles();
+    this.hideHandles();
+    this.target = list[list.length - 1];
+    list.forEach(el => el.classList.add('el-selected'));
+    const rects = list.map(el => el.getBoundingClientRect());
+    const bounds = {
+      left: Math.min(...rects.map(r => r.left)),
+      top: Math.min(...rects.map(r => r.top)),
+      right: Math.max(...rects.map(r => r.right)),
+      bottom: Math.max(...rects.map(r => r.bottom))
+    };
+    const frame = document.createElement('div');
+    frame.className = 'multi-selection-frame';
+    frame.style.cssText = `
+      position: fixed; left: ${bounds.left - 4}px; top: ${bounds.top - 4}px;
+      width: ${bounds.right - bounds.left + 8}px; height: ${bounds.bottom - bounds.top + 8}px;
+      border: 1px dashed var(--accent, #e9c46a); pointer-events: none; z-index: 999;
+    `;
+    document.body.appendChild(frame);
+  },
+
   // Reposiciona as alças sobre o elemento atual
   reposition() {
     if (!this.target) return;
@@ -129,6 +152,7 @@ window.Resize = {
 
   hideHandles() {
     document.querySelectorAll('.resize-handle, .rotate-handle').forEach(h => h.remove());
+    document.querySelectorAll('.multi-selection-frame').forEach(h => h.remove());
     document.querySelectorAll('#elements .el-selected').forEach(e => e.classList.remove('el-selected'));
     this.target = null;
   },
