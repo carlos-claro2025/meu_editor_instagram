@@ -28,7 +28,7 @@ backend obrigatório.
   realces, temperatura, tint, saturação, clareza e zoom
 - Texto editável com cor, tamanho, fonte, negrito, itálico, sublinhado e
   alinhamento
-- Formas, linhas e adesivos
+- Formas, linhas e adesivos, incluindo óculos escuros estilo “thug”
 - Seleção múltipla com Ctrl/Meta/Shift, selecionar tudo, alinhamento,
   agrupamento e desagrupamento
 - Camadas com thumbnails, nomes editáveis, ordenação, visibilidade, bloqueio,

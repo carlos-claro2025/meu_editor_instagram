@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Modal de adesivos: grade de emojis → Elements.createSticker
-  const STICKERS = ['😀','😂','😍','🥳','😎','🤩','🤔','😢','🔥','✨','⭐','💖',
+  const STICKERS = ['😀','😂','😍','🥳','😎','🕶️','🤩','🤔','😢','🔥','✨','⭐','💖',
     '💯','🎉','🎨','📸','💬','👑','🦋','🌈','🌸','🍕','☕','⚡'];
   const stickerGrid = document.getElementById('stickerGrid');
   if (stickerGrid) {
