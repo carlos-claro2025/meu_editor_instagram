@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', () => {
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
       item.classList.add('active');
-      const panelMap = { templates: 'templates', midia: 'feed', feed: 'feed', elementos: 'add', texto: 'add', musica: 'musica', ajustes: 'ajustes' };
+      const panelMap = { templates: 'templates', midia: 'feed', feed: 'feed', elementos: 'add', texto: 'add', musica: 'musica', marca: 'marca', ajustes: 'ajustes' };
       const panel = panelMap[item.dataset.nav];
       if (panel) switchTab(panel);
       // No mobile, a barra de navegação fica embaixo: abre o drawer com o painel escolhido
@@ -297,9 +297,70 @@ document.addEventListener('DOMContentLoaded', () => {
     opt.addEventListener('click', (e) => {
       e.stopPropagation();
       closeMenus();
-      Export.exportImage(e.currentTarget.dataset.format);
+      const option = e.currentTarget;
+      if (option.dataset.preset) {
+        Export.exportPreset(option.dataset.preset);
+      } else {
+        Export.exportImage(option.dataset.format);
+      }
     });
   });
+
+  document.getElementById('safeGuidesBtn')?.addEventListener('click', () => {
+    window.State.showGuides = !window.State.showGuides;
+    document.getElementById('phone')?.classList.toggle('show-guides', window.State.showGuides);
+    document.getElementById('safeGuidesBtn')?.classList.toggle('active', window.State.showGuides);
+    showToast(window.State.showGuides ? 'Guias de segurança ativadas' : 'Guias de segurança ocultas', 1400, 'info');
+  });
+
+  const brandKey = 'myStoryMakerBrandKit';
+  const brandLogoInput = document.getElementById('brandLogoInput');
+  const brandLogoPreview = document.getElementById('brandLogoPreview');
+  const brandPrimary = document.getElementById('brandPrimary');
+  const brandSecondary = document.getElementById('brandSecondary');
+  const loadBrandKit = () => {
+    try {
+      const kit = JSON.parse(localStorage.getItem(brandKey) || '{}');
+      if (kit.primary) brandPrimary.value = kit.primary;
+      if (kit.secondary) brandSecondary.value = kit.secondary;
+      if (kit.logo) {
+        brandLogoPreview.style.backgroundImage = `url("${kit.logo}")`;
+        brandLogoPreview.textContent = '';
+      }
+    } catch (error) { console.warn('Não foi possível carregar o kit de marca:', error); }
+  };
+  brandLogoInput?.addEventListener('change', () => {
+    const file = brandLogoInput.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      brandLogoPreview.dataset.logo = String(reader.result);
+      brandLogoPreview.style.backgroundImage = `url("${reader.result}")`;
+      brandLogoPreview.textContent = '';
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('saveBrandBtn')?.addEventListener('click', () => {
+    const kit = {
+      primary: brandPrimary.value,
+      secondary: brandSecondary.value,
+      logo: brandLogoPreview.dataset.logo || ''
+    };
+    localStorage.setItem(brandKey, JSON.stringify(kit));
+    showToast('Kit de marca salvo', 1600, 'success');
+  });
+  document.getElementById('applyBrandBtn')?.addEventListener('click', () => {
+    const selected = window.State.selected;
+    if (!selected) return showToast('Selecione um elemento primeiro', 1800, 'info');
+    selected.style.color = brandPrimary.value;
+    selected.style.borderColor = brandSecondary.value;
+    selected.style.backgroundColor = selected.dataset.el === 'shape' ? brandSecondary.value : selected.style.backgroundColor;
+    window.History?.push('style-change');
+    window.requestAutosave?.();
+    showToast('Marca aplicada ao selecionado', 1600, 'success');
+  });
+  loadBrandKit();
+  document.getElementById('phone')?.classList.toggle('show-guides', window.State.showGuides);
 
   // Ajuda / atalhos
   document.getElementById('helpBtn')?.addEventListener('click', () => {
@@ -508,6 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Teclado
   document.addEventListener('keydown', (e) => {
     const t = e.target;
+    if (e.key === 'Escape' && toolsEl && toolsEl.classList.contains('open')) {
+      setToolsOpen(false);
+      return;
+    }
     const typing = !!(t && (t.isContentEditable ||
       (typeof t.matches === 'function' && t.matches('input, textarea, select'))));
     if (typing) return;
@@ -523,7 +588,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const openModal = [...document.querySelectorAll('#shortcutsModal, #projectListModal, #stickerModal')]
         .find(m => m.style.display && m.style.display !== 'none');
       if (openModal) { openModal.style.display = 'none'; return; }
-      if (toolsEl && toolsEl.classList.contains('open')) { setToolsOpen(false); return; }
       window.State.selected = null;
       window.State.activeCell = null;
       document.querySelectorAll('.template-cell.selected').forEach(c => c.classList.remove('selected'));

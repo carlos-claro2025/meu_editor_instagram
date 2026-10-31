@@ -20,6 +20,8 @@ backend obrigatório.
 
 - Templates vazio, grid e mosaico
 - Proporções Story 9:16 e Post 1:1
+- Presets de exportação para Instagram Story, Instagram Post e Reel/TikTok
+- Guias visuais de área segura para composição mobile
 - Upload e arraste de imagens para o canvas, feed ou células dos templates
 - Upload de vídeos MP4, WebM e QuickTime para o canvas
 - Filtros predefinidos e ajustes de brilho, contraste, exposição, sombras,
@@ -38,6 +40,8 @@ backend obrigatório.
   waveform, troca e remoção
 - Projetos salvos no IndexedDB do navegador, com criar, abrir, renomear,
   excluir e autosave local
+- Kit de marca local com logo, cores primária/secundária, salvamento no
+  navegador e aplicação ao elemento selecionado
 - Importação/exportação de projetos `.json`, incluindo grupos aninhados e
   imagens incorporadas quando possível
 - Pré-visualização do canvas e exportação em PNG, JPG e WEBP
@@ -68,9 +72,10 @@ npx playwright install chromium firefox webkit
 npm run test:e2e:mobile
 ```
 
-Os testes validam carregamento responsivo, troca de proporção, drawer de
-ferramentas, upload de imagens e vídeos, drag-and-drop, seleção/agrupamento,
-restauração de projetos, undo/redo e exportação. Evidências de falha ficam em
+Os testes validam carregamento responsivo, troca de proporção, presets e
+guias de exportação, kit de marca, drawer de ferramentas, upload de imagens e
+vídeos, drag-and-drop, seleção/agrupamento, restauração de projetos, undo/redo
+e exportação. Evidências de falha ficam em
 `test-results/` como screenshot, vídeo e trace. O workflow
 `.github/workflows/validate.yml` executa a validação de sintaxe a cada push e
 pull request.
@@ -82,6 +87,10 @@ computador (`blob:`), imagens em `data:` e servidores que enviam
 `Access-Control-Allow-Origin` funcionam normalmente. Se uma imagem externa não
 permitir CORS, o navegador pode impedir a exportação; nesse caso, remova a
 imagem, use um arquivo local ou tente novamente em PNG.
+
+Antes de exportar, o editor informa quando há imagens externas sujeitas a
+CORS, vídeos que serão tratados como quadro estático e música que não será
+incorporada à imagem.
 
 O armazenamento de projetos usa o IndexedDB do navegador e, portanto, é local
 ao perfil e ao dispositivo. Limpar os dados do site pode remover os projetos

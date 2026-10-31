@@ -170,6 +170,61 @@ input[type=range] {
   align-items: center;
   gap: 8px;
 }
+.export-menu-separator {
+  height: 1px;
+  margin: 4px 2px;
+  background: #383c42;
+}
+.brand-upload {
+  display: grid;
+  gap: 6px;
+  color: #bfc3c9;
+  font-size: 11px;
+}
+.brand-upload input[type="file"] {
+  width: 100%;
+  font-size: 11px;
+}
+.brand-logo-preview {
+  min-height: 54px;
+  margin: 8px 0;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #454a52;
+  border-radius: 8px;
+  background-color: #202328;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  color: #818894;
+  font-size: 11px;
+}
+.brand-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.brand-colors label {
+  display: grid;
+  gap: 4px;
+  color: #bfc3c9;
+  font-size: 11px;
+}
+.brand-colors input[type="color"] {
+  width: 100%;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid #454a52;
+  border-radius: 6px;
+  background: #202328;
+}
+.brand-help {
+  margin: 8px 0 0;
+  color: #858b95;
+  font-size: 10px;
+  line-height: 1.4;
+}
 .feed-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -72,6 +72,23 @@
     max-width: 100%;
     border-radius: 14px;
   }
+  .phone.show-guides::before,
+  .phone.show-guides::after {
+    content: "";
+    position: absolute;
+    z-index: 20;
+    pointer-events: none;
+    border: 1px dashed rgba(233, 196, 106, 0.62);
+  }
+  .phone.show-guides::before {
+    inset: 9% 7%;
+    border-radius: 5px;
+  }
+  .phone.show-guides::after {
+    inset: 15% 11%;
+    border-radius: 4px;
+    border-color: rgba(255, 255, 255, 0.34);
+  }
 
   /* Ferramentas viram um drawer deslizante */
   .tools {

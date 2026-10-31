@@ -194,4 +194,33 @@ test.describe('editor mobile', () => {
     await expect(page.locator('#exportMenu [data-format="jpg"]')).toBeVisible();
     await expect(page.locator('#exportMenu [data-format="webp"]')).toBeVisible();
   });
+
+  test('alterna guias de segurança e presets sociais', async ({ page }) => {
+    await expect(page.locator('#phone')).toHaveClass(/show-guides/);
+    await page.locator('#safeGuidesBtn').click();
+    await expect(page.locator('#phone')).not.toHaveClass(/show-guides/);
+    await page.locator('#safeGuidesBtn').click();
+
+    await page.locator('#exportDropdownBtn').click();
+    await expect(page.locator('#exportMenu [data-preset="post"]')).toBeVisible();
+    await page.locator('#exportMenu [data-preset="post"]').click();
+    await expect(page.locator('#ratioLabel')).toHaveText('Post • 1:1');
+  });
+
+  test('salva e aplica um kit de marca local', async ({ page }) => {
+    await page.locator('[data-nav="texto"]').click();
+    await page.locator('[data-action="add-text"]').click();
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => window.switchTab('marca'));
+    await page.locator('#toolsToggle').click();
+    await expect(page.locator('#panel-marca')).toBeVisible();
+    await page.locator('#brandPrimary').fill('#ff3366');
+    await page.evaluate(() => document.getElementById('saveBrandBtn').click());
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('myStoryMakerBrandKit')).primary)).toBe('#ff3366');
+    await page.evaluate(() => {
+      window.State.selected = document.querySelector('#elements > [data-el="text"]');
+    });
+    await page.evaluate(() => document.getElementById('applyBrandBtn').click());
+    await expect(page.locator('#elements > [data-el="text"]')).toHaveCSS('color', 'rgb(255, 51, 102)');
+  });
 });

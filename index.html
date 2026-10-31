@@ -165,6 +165,7 @@
       <div class="nav-item" data-nav="elementos"><span class="icon">✱</span> Elementos</div>
       <div class="nav-item" data-nav="texto"><span class="icon">T</span> Texto</div>
       <div class="nav-item" data-nav="musica"><span class="icon">♫</span> Música</div>
+      <div class="nav-item" data-nav="marca"><span class="icon">◆</span> Marca</div>
       <div style="margin-top:auto;" class="nav-item" data-nav="ajustes"><span class="icon">⚙</span> Ajustes</div>
     </aside>
 
@@ -253,6 +254,10 @@
               <div class="export-option" data-format="png">PNG</div>
               <div class="export-option" data-format="jpg">JPG</div>
               <div class="export-option" data-format="webp">WEBP</div>
+              <div class="export-menu-separator"></div>
+              <div class="export-option" data-preset="story">Instagram Story 9:16</div>
+              <div class="export-option" data-preset="post">Instagram Post 1:1</div>
+              <div class="export-option" data-preset="reel">Reel / TikTok 9:16</div>
             </div>
           </div>
           <button class="btn" id="toolsToggle" aria-label="Abrir painel de ferramentas" title="Ferramentas">☰</button>
@@ -270,6 +275,7 @@
           <span class="tool-rail-divider"></span>
           <button type="button" class="tool-rail-btn" data-nav="feed" data-tooltip="Mídia" aria-label="Abrir mídia">▧</button>
           <button type="button" class="tool-rail-btn" data-nav="canvas" data-tooltip="Camadas" aria-label="Abrir camadas">▤</button>
+          <button type="button" class="tool-rail-btn" id="safeGuidesBtn" data-tooltip="Guias de segurança" aria-label="Alternar guias de segurança">⌗</button>
         </div>
         <div class="phone" id="phone">
           <div class="overlay-controls">
@@ -439,6 +445,7 @@
           <input type="file" id="musicFileInput" accept="audio/*" style="display:none;" />
           <button class="btn" id="musicUploadBtn">Upload MP3/WAV</button>
         </div>
+
         <div id="musicPlayer" style="display:none; margin-top:12px;">
           <div style="font-size:13px; margin-bottom:8px;" id="musicTitle"></div>
           <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
@@ -454,6 +461,22 @@
           </div>
           <button class="btn" id="musicRemoveBtn" style="width:100%; margin-top:10px;">Remover música</button>
         </div>
+      </div>
+
+      <div class="tool-section" id="panel-marca" style="display:none;">
+        <h3>Kit de marca</h3>
+        <label class="brand-upload">
+          <span>Logo</span>
+          <input type="file" id="brandLogoInput" accept="image/png,image/jpeg,image/webp" />
+        </label>
+        <div id="brandLogoPreview" class="brand-logo-preview">Nenhuma logo</div>
+        <div class="brand-colors">
+          <label>Primária <input type="color" id="brandPrimary" value="#e9c46a" /></label>
+          <label>Secundária <input type="color" id="brandSecondary" value="#17130b" /></label>
+        </div>
+        <button class="btn" id="saveBrandBtn" type="button">Salvar kit</button>
+        <button class="btn" id="applyBrandBtn" type="button">Aplicar ao selecionado</button>
+        <p class="brand-help">O kit fica salvo neste navegador e pode ser aplicado ao texto selecionado.</p>
       </div>
 
       <!-- Adicionar -->
@@ -685,13 +708,13 @@
   <script src="js/templates.js"></script>
   <script src="js/drag-drop.js"></script>
   <script src="js/elements.js?v=step1"></script>
-  <script src="js/export.js?v=step4"></script>
+  <script src="js/export.js?v=step5"></script>
   <script src="js/music.js?v=4"></script>
   <script src="js/history.js?v=step2"></script>
   <script src="js/layers.js?v=step2"></script>
   <script src="js/resize.js?v=step1"></script>
   <script src="js/project.js?v=step2"></script>
-  <script src="js/app.js?v=step3"></script>
+  <script src="js/app.js?v=step6"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));

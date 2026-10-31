@@ -186,6 +186,13 @@
     return this.saveToDisk(format);
   },
 
+  async exportPreset(preset) {
+    const ratios = { story: '9:16', post: '1:1', reel: '9:16' };
+    const chip = document.querySelector(`.overlay-chip[data-ratio="${ratios[preset] || '9:16'}"]`);
+    chip?.click();
+    return this.saveToDisk('png', 0.92, preset);
+  },
+
   async exportWithOptions(quality) {
     return this.saveToDisk('png', quality);
   },
@@ -201,10 +208,12 @@
     // Nada a inicializar: os botões são ligados em app.js
   },
 
-  async saveToDisk(format, quality) {
+  async saveToDisk(format, quality, preset) {
     format = format || 'png';
     quality = quality || 0.92;
     this.setBusy(true);
+    const warnings = this.getExportWarnings();
+    if (warnings.length) this.notify('Aviso: ' + warnings.join(' • '), 'warning');
     this.notify('Preparando exportação…', 'info');
     let canvas;
     try {
@@ -230,7 +239,7 @@
       const href = format === 'png' ? canvas.toDataURL('image/png') : canvas.toDataURL(mime, quality);
 
       const link = document.createElement('a');
-      link.download = 'story-' + ts + '.' + format;
+      link.download = (preset || 'story') + '-' + ts + '.' + format;
       link.href = href;
       link.click();
       this.notify('Imagem exportada em ' + format.toUpperCase(), 'success');
@@ -240,5 +249,16 @@
     } finally {
       this.setBusy(false);
     }
+  },
+
+  getExportWarnings() {
+    const warnings = [];
+    const external = [...document.querySelectorAll('#phone img')].filter(img =>
+      /^https?:\/\//i.test(img.currentSrc || img.src)
+    );
+    if (external.length) warnings.push(`${external.length} imagem(ns) externa(s) podem exigir CORS`);
+    if (document.querySelector('#phone video')) warnings.push('Vídeos serão exportados como quadro estático na imagem');
+    if (window.MusicPlayer?.getSnapshot?.()) warnings.push('A música de fundo não é incorporada ao PNG/JPG/WEBP');
+    return warnings;
   },
 };
